@@ -21,8 +21,17 @@ interface AnchorPoint {
 }
 
 interface MessageBubbleProps {
-  initialGridPosition: GridPosition
-  initialGridSize: GridDimensions
+  initialGridPosition: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  initialGridSize: {
+    width: number;
+    height: number;
+  };
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 const styles = {
@@ -155,7 +164,9 @@ const CornerHandle = React.memo(({ corner, isHovered }: { corner: Corner, isHove
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
   initialGridPosition = { x: 0, y: 0, z: 0 },
-  initialGridSize = { width: GRID.SECTION_SIZE, height: GRID.SECTION_SIZE }
+  initialGridSize = { width: GRID.SECTION_SIZE, height: GRID.SECTION_SIZE },
+  onFocus,
+  onBlur
 }) => {
   const { camera, raycaster } = useThree()
   const mouseVector = useRef(new Vector2())
@@ -317,10 +328,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           <textarea 
             placeholder="Write..." 
             style={styles.messageTextArea as any}
-            onFocus={() => setIsTextAreaFocused(true)}
+            onFocus={() => {
+              setIsTextAreaFocused(true);
+              onFocus?.();
+              console.log('MessageBubble focused');
+            }}
             onBlur={() => {
               if (!activeCorner) {
-                setIsTextAreaFocused(false)
+                setIsTextAreaFocused(false);
+                onBlur?.();
+                console.log('MessageBubble blurred');
               }
             }}
           />

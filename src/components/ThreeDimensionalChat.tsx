@@ -6,12 +6,23 @@ import * as THREE from 'three'
 import { MessageBubble } from './MessageBubble'
 import { GRID } from '../constants/grid'
 
+interface Message {
+  id: string;
+  position: THREE.Vector3;
+  content: string;
+}
+
 export function ThreeDimensionalChat() {
-  const [cursorPosition, setCursorPosition] = useState<[number, number, number]>([0, 0, 0])
-  const { camera, raycaster, scene } = useThree()
+  const { camera } = useThree()
   const lightRef = React.useRef<THREE.DirectionalLight>(null)
   const gridRef = React.useRef<any>(null)
   const planeRef = useRef<THREE.Mesh>(null)
+  const [messages, setMessages] = useState<Message[]>([{
+    id: crypto.randomUUID(),
+    position: new THREE.Vector3(0, 2, 0),
+    content: ''
+  }]);
+  const [focusedMessageId, setFocusedMessageId] = useState<string | null>(null);
 
   React.useEffect(() => {
     camera.position.set(0, 30, 5)
@@ -55,21 +66,36 @@ export function ThreeDimensionalChat() {
     }
   })
 
-  const handlePointerMove = () => {
-    const intersects = raycaster.intersectObjects(scene.children)
-    const gridIntersection = intersects.find(intersect => 
-      intersect.object.name === 'grid-plane'
-    )
-
-    if (gridIntersection) {
-      const { point } = gridIntersection
-      setCursorPosition([point.x, 0, point.z])
+  const handleEnterPress = () => {
+    console.log('Enter press handler called, focused message:', focusedMessageId);
+    if (!focusedMessageId) {
+      console.log('No message focused, returning');
+      return;
     }
-  }
+
+    const focusedMessage = messages.find(msg => msg.id === focusedMessageId);
+    if (!focusedMessage) {
+      console.log('Focused message not found, returning');
+      return;
+    }
+
+    const newMessage = {
+      id: crypto.randomUUID(),
+      position: new THREE.Vector3(
+        focusedMessage.position.x,
+        focusedMessage.position.y,
+        focusedMessage.position.z + 5 // 5 units further in Z direction
+      ),
+      content: ''
+    };
+
+    console.log('Creating new message:', newMessage);
+    setMessages(prev => [...prev, newMessage]);
+  };
 
   return (
     <>
-      <CustomControls />
+      <CustomControls onEnterPress={handleEnterPress} />
       <Grid
         ref={gridRef}
         name="grid"
@@ -86,25 +112,11 @@ export function ThreeDimensionalChat() {
         infiniteGrid
       />
 
-      {/* Updated MessageBubble with proper grid-based props */}
-      <MessageBubble 
-        initialGridPosition={{
-          x: 0,
-          y: 0,
-          z: 0
-        }}
-        initialGridSize={{
-          width: GRID.SECTION_SIZE,
-          height: GRID.SECTION_SIZE
-        }}
-      />
-
       {/* Updated invisible plane with ref */}
       <mesh 
         ref={planeRef}
         name="grid-plane" 
         rotation={[-Math.PI / 2, 0, 0]} 
-        onPointerMove={handlePointerMove}
       >
         <planeGeometry args={[200, 200]} />
         <meshStandardMaterial visible={false} />
@@ -120,6 +132,29 @@ export function ThreeDimensionalChat() {
 
       {/* Dark background */}
       <color attach="background" args={['#111111']} />
+
+      {messages.map(message => (
+        <MessageBubble
+          key={message.id}
+          initialGridPosition={{
+            x: message.position.x,
+            y: message.position.y,
+            z: message.position.z
+          }}
+          initialGridSize={{
+            width: GRID.SECTION_SIZE,
+            height: GRID.SECTION_SIZE
+          }}
+          onFocus={() => {
+            console.log('Message focused:', message.id);
+            setFocusedMessageId(message.id);
+          }}
+          onBlur={() => {
+            console.log('Message blurred:', message.id);
+            setFocusedMessageId(null);
+          }}
+        />
+      ))}
     </>
   )
 } 

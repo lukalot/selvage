@@ -2,7 +2,11 @@ import { useThree, useFrame } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 
-export function CustomControls() {
+interface CustomControlsProps {
+  onEnterPress?: () => void;
+}
+
+export function CustomControls({ onEnterPress }: CustomControlsProps) {
   const { camera, gl } = useThree()
   const isDragging = useRef(false)
   const previousMousePosition = useRef({ x: 0, y: 0 })
@@ -135,11 +139,20 @@ export function CustomControls() {
       event.preventDefault()
     }
     
+    const handleKeyPress = (event: KeyboardEvent) => {
+      console.log('Key pressed:', event.key);
+      if (event.key === 'Enter') {
+        console.log('Enter pressed, focused message:', focusedMessageId);
+        onEnterPress?.();
+      }
+    }
+    
     canvas.addEventListener('mousedown', handleMouseDown)
     window.addEventListener('mouseup', handleMouseUp)
     window.addEventListener('mousemove', handleMouseMove)
     canvas.addEventListener('wheel', handleWheel, { passive: false })
     canvas.addEventListener('contextmenu', handleContextMenu)
+    window.addEventListener('keypress', handleKeyPress)
     
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDown)
@@ -147,8 +160,9 @@ export function CustomControls() {
       window.removeEventListener('mousemove', handleMouseMove)
       canvas.removeEventListener('wheel', handleWheel)
       canvas.removeEventListener('contextmenu', handleContextMenu)
+      window.removeEventListener('keypress', handleKeyPress)
     }
-  }, [camera, gl])
+  }, [camera, gl, onEnterPress])
   
   return null
 } 

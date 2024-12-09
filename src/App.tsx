@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { ThreeDimensionalChat } from './components/ThreeDimensionalChat'
 import { CustomControls } from './components/CustomControls'
