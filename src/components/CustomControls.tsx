@@ -142,7 +142,6 @@ export function CustomControls({ onEnterPress }: CustomControlsProps) {
     const handleKeyPress = (event: KeyboardEvent) => {
       console.log('Key pressed:', event.key);
       if (event.key === 'Enter') {
-        console.log('Enter pressed, focused message:', focusedMessageId);
         onEnterPress?.();
       }
     }
